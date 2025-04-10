@@ -1,29 +1,36 @@
 from flask import Flask, request, jsonify
 import requests
 from bs4 import BeautifulSoup
-import os
 
 app = Flask(__name__)
 
-@app.route("/notion-crawl", methods=["GET"])
+@app.route('/')
+def home():
+    return "Notion 크롤링 API입니다."
+
+@app.route('/notion-crawl')
 def crawl_notion():
-    url = request.args.get("url")
+    url = request.args.get('url')
     if not url:
-        return jsonify({"error": "No URL provided"}), 400
+        return jsonify({'error': 'url 파라미터가 필요합니다'}), 400
 
     try:
         headers = {
             "User-Agent": "Mozilla/5.0"
         }
         response = requests.get(url, headers=headers)
-        soup = BeautifulSoup(response.text, "html.parser")
-        blocks = soup.select('div[data-block-id]')
-        texts = [block.get_text(strip=True) for block in blocks if block.get_text(strip=True)]
-        return jsonify({"blocks": texts})
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        soup = BeautifulSoup(response.text, 'html.parser')
 
-if __name__ == "__main__":
-    app.run()
-if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=10000)
+        # Notion의 주요 텍스트 블록 찾기
+        blocks = soup.select('[class*="notion-"]')
+
+        texts = []
+        for block in blocks:
+            text = block.get_text(strip=True)
+            if text:
+                texts.append(text)
+
+        return jsonify({'text_blocks': texts})
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
