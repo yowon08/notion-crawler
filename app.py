@@ -1,3 +1,4 @@
+import os
 from flask import Flask, request, jsonify
 import requests
 from bs4 import BeautifulSoup
@@ -21,7 +22,6 @@ def crawl_notion():
         response = requests.get(url, headers=headers)
         soup = BeautifulSoup(response.text, 'html.parser')
 
-        # Notion의 주요 텍스트 블록 찾기
         blocks = soup.select('[class*="notion-"]')
 
         texts = []
@@ -34,3 +34,9 @@ def crawl_notion():
 
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+
+# 🔥 여기 중요: Render가 사용하는 PORT 환경변수로 실행해야 함
+if __name__ == '__main__':
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host='0.0.0.0', port=port)
